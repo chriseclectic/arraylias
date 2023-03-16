@@ -9,8 +9,8 @@
 # pylint: disable=import-error
 
 
-def register_jax(alias):
-    """Register default implementation of JAX if installed.
+def register_jax_types(alias):
+    """Register JAX array types if installed.
 
     Args:
         alias (Alias): The alias dispatcher to register with.
@@ -23,30 +23,62 @@ def register_jax(alias):
         from jax.interpreters.xla import DeviceArray
         from jax.core import Tracer
 
-        lib = "jax"
-
         # pylint: disable = invalid-name
         JAX_TYPES = (DeviceArray, Tracer, jax.Array)
 
         # Register jax types
         for atype in JAX_TYPES:
-            alias.register_type(atype, lib)
-
-        # Register jax numpy modules
-        alias.register_module(jax.numpy, lib)
-
-        # Jax doesn't implement a copy method, so we add one using the
-        # jax numpy.array constructor which implicitly copies
-        # pylint: disable=unused-variable
-        @alias.register_function(lib=lib)
-        def copy(array, order="K"):
-            return jax.numpy.array(array, copy=True, order=order)
-
-        # Register Jax linalg functions
-        alias.register_module(jax.numpy.linalg, path="linalg", lib=lib)
-        alias.register_module(jax.scipy.linalg, path="linalg", lib=lib)
+            alias.register_type(atype, "jax")
 
         return True
 
     except ModuleNotFoundError:
         return False
+
+
+def register_jax_numpy(alias):
+    """Register jax.numpy if JAX is installed.
+
+    Args:
+        alias (Alias): The alias dispatcher to register with.
+
+    Returns:
+        bool: True if jax is installed and was successfully registered.
+    """
+    if register_jax_types(alias):
+        import jax
+
+        # Register jax numpy modules
+        alias.register_module(jax.numpy, lib="jax")
+
+        # Jax doesn't implement a copy method, so we add one using the
+        # jax numpy.array constructor which implicitly copies
+        # pylint: disable=unused-variable
+        @alias.register_function(lib="jax")
+        def copy(array, order="K"):
+            return jax.numpy.array(array, copy=True, order=order)
+
+        # Register Jax linalg functions
+        alias.register_module(jax.numpy.linalg, lib="jax", path="linalg")
+
+        return True
+
+    return False
+
+
+def register_jax_scipy(alias):
+    """Register jax.scipy if JAX is installed.
+
+    Args:
+        alias (Alias): The alias dispatcher to register with.
+
+    Returns:
+        bool: True if jax is installed and was successfully registered.
+    """
+    if register_jax_types(alias):
+        import jax
+
+        alias.register_module(jax.scipy, lib="jax")
+
+        return True
+    return False
