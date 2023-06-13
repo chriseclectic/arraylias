@@ -79,7 +79,8 @@ def register_scipy(alias, register_numbers=True):
             (Default: ``True``).
 
     Returns:
-        bool: ``True`` if SciPy is installed and was successfully registered, otherwise ``False``.
+        bool: ``True`` if SciPy is installed and was successfully registered, otherwise 
+        ``False``.
     """
     if register_numpy_types(alias, register_numbers):
         try:
